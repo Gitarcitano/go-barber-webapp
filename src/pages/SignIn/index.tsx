@@ -1,10 +1,12 @@
-import React, { useCallback, useRef, useContext } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { FiLogIn, FiMail, FiLock } from 'react-icons/fi';
 import { FormHandles } from '@unform/core';
 import { Form } from '@unform/web';
 import * as Yup from 'yup';
 
-import { AuthContext } from '../../context/AuthContext';
+import { useAuth } from '../../hooks/auth';
+import { useToast } from '../../hooks/toast';
+
 import getValidationErros from '../../utils/getValidationErrors';
 import logoImg from '../../assets/logo.svg';
 
@@ -21,7 +23,8 @@ interface SignInFormData {
 const SignIn: React.FC = () => {
   const formRef = useRef<FormHandles>(null);
 
-  const { signIn } = useContext(AuthContext);
+  const { signIn } = useAuth();
+  const { addToast } = useToast();
 
   const handleSubmit = useCallback(
     async (data: SignInFormData) => {
@@ -35,24 +38,25 @@ const SignIn: React.FC = () => {
           password: Yup.string().required('Senha obrigatória'),
         });
 
-        console.log('antes do await');
         await schema.validate(data, {
           abortEarly: false,
         });
 
-        console.log('depois do await');
-
-        signIn({
+        await signIn({
           email: data.email,
           password: data.password,
         });
       } catch (err) {
-        const errors = getValidationErros(err);
+        if (err instanceof Yup.ValidationError) {
+          const errors = getValidationErros(err);
 
-        formRef.current?.setErrors(errors);
+          formRef.current?.setErrors(errors);
+        }
+
+        addToast();
       }
     },
-    [signIn],
+    [signIn, addToast],
   );
 
   return (
