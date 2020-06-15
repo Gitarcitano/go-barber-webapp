@@ -3,7 +3,7 @@ import { shade } from 'polished';
 
 export const Container = styled.div`
   > header {
-    height: 144px;
+    height: 112px;
     background: #28262e;
 
     display: flex;
